@@ -1,0 +1,36 @@
+import pandas as pd
+from bs4 import BeautifulSoup
+import requests
+import time
+
+headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+url="https://movie.douban.com/top250"
+response=requests.get(url,headers=headers)
+# print(response.status_code)
+soup=BeautifulSoup(response.text,"html.parser")
+# print(soup)
+movies=soup.find_all("div",class_="item")
+print(f"本页搜索到{len(movies)}部电影。")
+for movie in movies:
+    # print(movie.prettify())
+    print(f"中文名称为：{movie.find("span",class_="title").text}")
+    print(f"其他名称为：{movie.find("span",class_="other").text}")
+    judge=movie.find("span",class_="playable")# 赋值为变量省内存
+    if judge:# 标签内空时（None）无法转换文本形式，用if判断补充内容
+        print("是否可播放：可播放")
+    else:
+        print("是否可播放：不可播放")
+    info_p=movie.find("div",class_="bd").find("p").text
+    info_p=info_p.replace("\n","").strip().split()
+    # print(info_p)
+    director = []
+    actor = []
+    launch = []
+    nation = []
+    movie_type = []
+    for item1 in info_p:
+        if item1== '主演:':
+            break
+        director.append(item1)
+    print(director)
+    print(" ")
