@@ -32,5 +32,30 @@ for movie in movies:
         if item1== '主演:':
             break
         director.append(item1)
+    del info_p[0:len(director)]
     print(director)
+    info_p.reverse()
+    for item2 in info_p:
+        if item2=="/":
+            break
+        movie_type.append(item2)
+    del info_p[0:len(movie_type)+1]
+    print(movie_type)
+    for item3 in info_p:
+        if item3=="/":
+            break
+        nation.append(item3)
+    del info_p[0:len(nation)+1]
+    print(nation)
+    # 取年份 - 加上容错
+    if len(info_p):
+        launch.append(info_p[0])
+        info_p.pop(0)
+    else:
+        launch.append("未知")
+    # launch.append(info_p[0])
+    # info_p.pop(0)
+    print(launch)
+    info_p.reverse()
+    print(info_p)
     print(" ")
