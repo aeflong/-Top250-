@@ -4,7 +4,7 @@ import requests
 import time
 
 all_movies=[]
-for page in range(2):
+for page in range(10):
     start=page*25
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     url = f"https://movie.douban.com/top250?start={start}"
@@ -13,18 +13,21 @@ for page in range(2):
     soup = BeautifulSoup(response.text, "html.parser")
     # print(soup)
     movies = soup.find_all("div", class_="item")
+    # print(movies)
     print(f"本页搜索到{len(movies)}部电影。")
     for movie in movies:
         # print(movie.prettify())
         title=movie.find("span",class_="title").text
-        other=movie.find("span",class_="other").text
+        other_title=movie.find("span",class_="other").text
         print(f"中文名称为：{title}")
-        print(f"其他名称为：{other}")
+        print(f"其他名称为：{other_title}")
         judge=movie.find("span",class_="playable")# 赋值为变量省内存
         if judge:# 标签内空时（None）无法转换文本形式，用if判断补充内容
-            print("是否可播放：可播放")
+            playable=judge.text
+            print(f"是否可播放：{playable}")
         else:
-            print("是否可播放：不可播放")
+            playable="未知"
+            print(f"是否可播放：{playable}")
         info_p=movie.find("div",class_="bd").find("p").text
         info_p=info_p.replace("\n","").strip().split()
         # print(info_p)
@@ -36,34 +39,52 @@ for page in range(2):
         for item1 in info_p:
             if item1== '主演:':
                 break
+            # elif item1== '主...':
+            #     break
             director.append(item1)
-        del info_p[0:len(director)]
-        print(director)
+        del info_p[0:len(director)]# 如果未识别到主演等，则会全部添加到director，导致info_p变成空列表
         info_p.reverse()
         for item2 in info_p:
             if item2=="/":
                 break
             movie_type.append(item2)
         del info_p[0:len(movie_type)+1]
-        print(movie_type)
         for item3 in info_p:
             if item3=="/":
                 break
             nation.append(item3)
         del info_p[0:len(nation)+1]
-        print(nation)
-        # 取年份 - 加上容错
+        # 取年份 - 加上容错（最后根据空列表判断，填充数据）
         if len(info_p):
             launch.append(info_p[0])
             info_p.pop(0)
+            info_p.reverse()
         else:
-            launch.append("未知")
-        # launch.append(info_p[0])
-        # info_p.pop(0)
-        print(launch)
-        info_p.reverse()
+            director = ["导演数据异常"]
+            info_p = ["主演数据异常"]
+            launch = ["发布年份数据异常"]
+            nation = ["国家数据异常"]
+            movie_type = ["电影类型数据异常"]
+        print(director)
         print(info_p)
+        print(launch)
+        print(nation)
+        print(movie_type)
+        rating_num=movie.find("span",class_="rating_num").text
+        print(f"评分：{rating_num}")
+        rating_people=movie.find("span",string=lambda x:x and "人评价" in x).text
+        print(f"评价人数：{rating_people}")
+        quote=movie.find("p",class_="quote")# 可能没有"quote"这个标签，此时获得的是None
+        if quote:
+            quote=quote.find("span").text
+            print(f"引言：{quote}")
+        else:
+            print("暂无引言")
         print("\n")
-        all_movies.append({movie})
-        # time.sleep(2)
-    print(f"第{page+1}页已爬取，已爬取{len(all_movies)}")
+        all_movies.append({"Top":len(all_movies),"中文名称":title,"其他名称":other_title,"是否可播放":playable,"导演":director,"主演":info_p,\
+                           "发布年份":launch,"发布国家":nation,"电影类型":movie_type,"电影评分":rating_num,"评价人数":rating_people,"引言":quote})
+        print(f"第{page + 1}页已爬取，已爬取{len(all_movies)}部")
+    time.sleep(2)
+df=pd.DataFrame(all_movies)
+df.to_csv("movie.csv",index=False)
+print("已导出到豆瓣Top250.xlsx")
