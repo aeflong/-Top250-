@@ -1,0 +1,26 @@
+import pandas as pd
+import ast # ast库将字符串形式列表转换为真正列表
+
+df=pd.read_csv("movie.csv")
+# print(df.head())
+# print(df.info())
+# print(pd.isnull().sum())
+
+# 解决元素为列表问题
+def list_to_str(x):
+    try:
+        x=ast.literal_eval(x)
+        if isinstance(x,list):
+            return ",".join(str(item) for item in x)
+        else:
+            return x
+    except(ValueError, TypeError):
+        return x
+df["导演"]=df["导演"].apply(list_to_str)
+df["是否可播放"]=df["是否可播放"].str.replace("[","").str.replace("]","")# []中只有一个文本，只能算数字符串，无法调用函数，直接替换[]即可
+df["主演"]=df["主演"].apply(list_to_str)
+df["发布年份"]=df["发布年份"].apply(list_to_str)
+df["发布国家"]=df["发布国家"].apply(list_to_str)
+df["电影类型"]=df["电影类型"].apply(list_to_str)
+df["其他名称"]=df["其他名称"].replace("/","", regex=True)
+df.to_csv("清洗数据.csv",index=False)
